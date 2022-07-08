@@ -1,39 +1,70 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
+	"log"
+
 	goredislib "github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 )
 
-func main() {
-	// Create a pool with go-redis (or redigo) which is the pool redisync will
-	// use while communicating with Redis. This can also be any pool that
-	// implements the `redis.Pool` interface.
-	client := goredislib.NewClient(&goredislib.Options{
-		Addr: "localhost:6379",
-	})
-	pool := goredis.NewPool(client) // or, pool := redigo.NewPool(...)
+type UnLock interface {
+	UnLock() error
+}
 
-	// Create an instance of redisync to be used to obtain a mutual exclusion
-	// lock.
+type lock struct {
+	mutex *redsync.Mutex
+}
+
+func newLock(client *goredislib.Client, ns, k string) *lock {
+	pool := goredis.NewPool(client)
 	rs := redsync.New(pool)
+	expiryOption := redsync.WithExpiry(10 * time.Second)
+	return &lock{
+		mutex: rs.NewMutex(ns+":"+k, expiryOption),
+	}
+}
 
-	// Obtain a new mutex by using the same name for all instances wanting the
-	// same lock.
-	mutexname := "my-global-mutex"
-	mutex := rs.NewMutex(mutexname)
-
-	// Obtain a lock for our given mutex. After this is successful, no one else
-	// can obtain the same lock (the same mutex name) until we unlock it.
-	if err := mutex.Lock(); err != nil {
-		panic(err)
+func (l *lock) UnLock() error {
+	if _, err := l.mutex.Unlock(); err != nil {
+		log.Println(err.Error())
+		return err
 	}
 
-	// Do your work that requires the lock.
+	return nil
+}
 
-	// Release the lock so other processes or threads can obtain a lock.
-	if ok, err := mutex.Unlock(); !ok || err != nil {
-		panic("unlock failed")
+func newKeyLock(client *goredislib.Client, k, ns string) UnLock {
+	l := newLock(client, "lock:"+ns, k)
+	err := l.mutex.Lock()
+	if err != nil {
+		log.Println(err.Error())
 	}
+
+	return l
+}
+
+func CreateObj(client *goredislib.Client, key string) UnLock {
+	return newKeyLock(client, key, "create_obj")
+}
+
+func fn(i int) {
+	client := goredislib.NewClient(&goredislib.Options{
+		Addr: "192.168.1.234:6379",
+	})
+
+	defer CreateObj(client, "house").UnLock()
+}
+
+func main() {
+	go fn(1)
+	go fn(2)
+	go fn(3)
+	go fn(4)
+
+	time.Sleep(5 * time.Second)
+	fmt.Println("ok")
 }
