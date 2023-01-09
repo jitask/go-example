@@ -3,5 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("Hello world!")
+	for _, v := range []rune("") {
+		i := int64(v)
+		fmt.Println(i)
+	}
 }
