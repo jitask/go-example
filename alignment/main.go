@@ -1,3 +1,10 @@
+// byte, int8, uint8 -> 1
+// int16, uint16 -> 2
+// int32, uint32, float32, complex64 -> 4
+// int, int64, uint64, float64, complex128 -> 8
+
+// string, slice -> 8
+
 package main
 
 import (
