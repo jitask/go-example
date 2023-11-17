@@ -39,9 +39,9 @@ func main() {
 	}
 
 	fmt.Println("Offset of a", unsafe.Offsetof(f.a)) // 0
-	fmt.Println("Offset of b", unsafe.Offsetof(f.b)) // 8
-	fmt.Println("Offset of c", unsafe.Offsetof(f.c)) // 16
-	fmt.Println("Sizeof Example", unsafe.Sizeof(f))  // 32
+	fmt.Println("Offset of b", unsafe.Offsetof(f.b)) // 2
+	fmt.Println("Offset of c", unsafe.Offsetof(f.c)) // 8
+	fmt.Println("Sizeof Example", unsafe.Sizeof(f))  // 24
 	fmt.Println()
 	fmt.Println("Offset of a", unsafe.Offsetof(v.a)) // 0
 	fmt.Println("Offset of b", unsafe.Offsetof(v.b)) // 8
@@ -49,5 +49,5 @@ func main() {
 	fmt.Println("Offset of d", unsafe.Offsetof(v.d)) // 28
 	fmt.Println("Offset of e", unsafe.Offsetof(v.e)) // 32
 	fmt.Println("Offset of f", unsafe.Offsetof(v.f)) // 56
-	fmt.Println("Sizeof Example", unsafe.Sizeof(v))  // 88
+	fmt.Println("Sizeof Example", unsafe.Sizeof(v))  // 80
 }
